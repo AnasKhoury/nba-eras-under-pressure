@@ -1,0 +1,16 @@
+{
+  "source_name": "FiveThirtyEight Historical NBA Elo",
+  "source_url": "https://github.com/fivethirtyeight/data/tree/master/nba-elo",
+  "raw_rows": 118016,
+  "unique_games": 59008,
+  "season_count": 69,
+  "team_count": 45,
+  "first_season": 1947,
+  "last_season": 2015,
+  "preprocessing": [
+    "Filtered to NBA rows only.",
+    "Collapsed the two team-perspective rows for each game into one game-level record.",
+    "Derived margin, total points, home win, close game flag, favorite probability, winner probability, and upset flag.",
+    "Aggregated season, franchise, and franchise-season summaries for interactive views."
+  ]
+}

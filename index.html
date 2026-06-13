@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NBA Eras Under Pressure</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="masthead">
+      <div>
+        <p class="eyebrow">Interactive NBA history analysis</p>
+        <h1>NBA Eras Under Pressure</h1>
+        <p class="lede">A linked-view dashboard for exploring how home-court advantage, scoring, close games, franchise strength, and Elo upsets shifted from 1947 to 2015.</p>
+      </div>
+      <div class="status">
+        <span>FiveThirtyEight Elo</span>
+        <span id="rangeLabel">1947-2015</span>
+        <span id="teamLabel">All franchises</span>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="Dashboard filters">
+      <label>
+        Start season
+        <input id="startSeason" type="range" min="1947" max="2015" value="1947">
+        <span id="startValue">1947</span>
+      </label>
+      <label>
+        End season
+        <input id="endSeason" type="range" min="1947" max="2015" value="2015">
+        <span id="endValue">2015</span>
+      </label>
+      <label>
+        Franchise
+        <select id="teamSelect">
+          <option value="All">All franchises</option>
+        </select>
+      </label>
+      <button id="resetFilters" type="button">Reset</button>
+    </section>
+
+    <section class="insights" aria-label="Current analytical focus">
+      <article>
+        <span>Question</span>
+        <strong>How did NBA game structure change across eras?</strong>
+      </article>
+      <article>
+        <span>Current focus</span>
+        <strong id="focusText">All seasons and all franchises</strong>
+      </article>
+      <article>
+        <span>How to use</span>
+        <strong>Filter, click a season, then inspect the game-level surprises.</strong>
+      </article>
+    </section>
+
+    <section class="kpis" aria-label="Summary metrics">
+      <article><span>Games</span><strong id="kpiGames">-</strong><small>Unique matchups</small></article>
+      <article><span>Home win rate</span><strong id="kpiHome">-</strong><small>Non-neutral games</small></article>
+      <article><span>Close games</span><strong id="kpiClose">-</strong><small>Margin of 5 or fewer</small></article>
+      <article><span>Upsets</span><strong id="kpiUpsets">-</strong><small>Winner forecast below 50%</small></article>
+    </section>
+
+    <section class="grid">
+      <article class="panel wide">
+        <div class="panel-head">
+          <div>
+            <h2>Season Trends</h2>
+            <p>Compare major signals over time. Click a season point to focus the game explorer.</p>
+          </div>
+          <div class="metric-tabs" role="tablist" aria-label="Season metric">
+            <button class="active" data-season-metric="home_win_pct">Home</button>
+            <button data-season-metric="avg_total_points">Scoring</button>
+            <button data-season-metric="close_game_pct">Close</button>
+            <button data-season-metric="upset_pct">Upsets</button>
+          </div>
+        </div>
+        <div id="seasonChart" class="chart"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Era Map</h2>
+            <p>Each dot is a season: scoring on the x-axis, average margin on the y-axis.</p>
+          </div>
+        </div>
+        <div id="eraScatter" class="chart small"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Franchise Ranking</h2>
+            <p>Click a bar to filter every view by franchise.</p>
+          </div>
+          <select id="rankMetric" aria-label="Ranking metric">
+            <option value="win_pct">Win rate</option>
+            <option value="avg_margin">Avg margin</option>
+            <option value="avg_elo">Avg Elo</option>
+            <option value="avg_points_for">Points for</option>
+          </select>
+        </div>
+        <div id="teamBars" class="chart small"></div>
+      </article>
+
+      <article class="panel wide">
+        <div class="panel-head">
+          <div>
+            <h2>Game Explorer</h2>
+            <p>Largest model surprises in the current selection. The table updates with the filters above.</p>
+          </div>
+          <div class="legend">
+            <span><i class="swatch upset"></i>Upset</span>
+            <span><i class="swatch close"></i>Close game</span>
+          </div>
+        </div>
+        <div class="game-layout">
+          <div id="marginHist" class="chart mini"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Season</th>
+                  <th>Matchup</th>
+                  <th>Score</th>
+                  <th>Winner chance</th>
+                </tr>
+              </thead>
+              <tbody id="gameRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="notes">
+      <h2>How to Read This</h2>
+      <p>The dashboard treats each NBA game once, derives game-level signals from the two team rows in FiveThirtyEight's data, and links season, era, franchise, and game views through the same filters. An upset means the winner had less than a 50% pre-game Elo forecast.</p>
+    </section>
+  </main>
+
+  <div id="tooltip" role="status" aria-live="polite"></div>
+  <script src="vendor/d3.v7.min.js"></script>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
