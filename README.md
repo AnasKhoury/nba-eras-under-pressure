@@ -1,67 +1,104 @@
-# NBA Eras Under Pressure
+# \# NBA Eras Under Pressure
 
-Interactive web visualization project for exploring how NBA game structure changed across eras using FiveThirtyEight historical NBA Elo data.
+# 
 
-## Project Link
+# Interactive web dashboard for exploring how NBA game structure changed across eras using FiveThirtyEight historical NBA Elo data.
 
-https://anaskhoury.github.io/nba-eras-under-pressure/
+# 
 
-## Topic
+# \## Live Project
 
-This project studies how home-court advantage, scoring, close games, franchise strength, and Elo upsets changed across NBA history from 1947 to 2015.
+# 
 
-## Main Research Question
+# https://anaskhoury.github.io/nba-eras-under-pressure/
 
-How did the character of NBA games change across eras, and which franchises stand out when comparing different definitions of performance?
+# 
 
-## Dataset
+# \## Project Topic
 
-The project uses the FiveThirtyEight Historical NBA Elo dataset:
+# 
 
-https://github.com/fivethirtyeight/data/tree/master/nba-elo
+# The project analyzes NBA history from 1947 to 2015 through several questions:
 
-The original dataset contains one row per team per game. Since each game appears twice, the data was preprocessed into unique game-level records and aggregated summaries.
+# 
 
-After preprocessing:
-- 59,008 unique NBA games
-- 69 seasons, from 1947 to 2015
-- 45 franchises
+# \- How did home-court advantage change across eras?
 
-## Visualizations
+# \- Did high-scoring eras also produce closer or more unpredictable games?
 
-The dashboard includes four linked views:
+# \- Which franchises stand out under different success metrics?
 
-1. **Season Trends**  
-   Shows how home win rate, scoring, close-game rate, and upset rate changed over time.
+# \- Which games were the largest Elo-based upsets?
 
-2. **Era Map**  
-   Compares average total points and average scoring margin by season, colored by historical era.
+# 
 
-3. **Franchise Ranking**  
-   Ranks franchises by win rate, average margin, average Elo, or points scored.
+# \## Dataset
 
-4. **Game Explorer**  
-   Shows surprising Elo upsets and scoring-margin patterns for the selected filters.
+# 
 
-## Interaction
+# Source: FiveThirtyEight NBA Elo dataset  
 
-Users can:
-- Filter by season range.
-- Select a franchise.
-- Switch Season Trends metrics.
-- Switch Franchise Ranking metrics.
-- Click a season to focus the Game Explorer.
-- Click a franchise bar to filter all views.
-- Hover over marks to see exact values.
+# https://github.com/fivethirtyeight/data/tree/master/nba-elo
 
-## Tools
+# 
 
-- HTML
-- CSS
-- JavaScript
-- D3.js v7
-- Python for preprocessing
+# The processed dashboard data includes season-level summaries, franchise-level summaries, franchise-season records, and highlighted surprising games.
 
-## Notes
+# 
 
-This is a static web project and can run directly through GitHub Pages.
+# \## Dashboard Views
+
+# 
+
+# \- Season Trends: league-level measures over time.
+
+# \- Era Map: scoring versus average margin by season and era.
+
+# \- Scoring Pressure Relationship: relationship between scoring and close games, upsets, or margin, with era trend lines.
+
+# \- Franchise Ranking: sortable team comparison by win rate, average margin, average Elo, and points scored.
+
+# \- Era Profile Matrix: heatmap comparing eras across several pressure signals.
+
+# \- Franchise Rank Flow: ranking movement of leading franchises across eras.
+
+# \- Game Explorer: selected game-level surprises and close games.
+
+# 
+
+# \## Interaction
+
+# 
+
+# Users can filter by season range and franchise, switch metrics, click seasons, click franchise bars, and hover over marks for exact values. The views are linked so changes in one part of the dashboard update the rest.
+
+# 
+
+# \## Tools
+
+# 
+
+# \- HTML
+
+# \- CSS
+
+# \- JavaScript
+
+# \- D3.js
+
+# \- Python for preprocessing
+
+# \- GitHub Pages for deployment
+
+# \- OpenAI / ChatGPT / Codex assistance for coding, writing, and project refinement
+
+# 
+
+# \## How to Run Locally
+
+# 
+
+# ```bash
+
+# python -m http.server 8000
+
