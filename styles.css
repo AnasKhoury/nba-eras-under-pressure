@@ -20,9 +20,10 @@
 body {
   margin: 0;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.82) 0, rgba(244,242,235,0.82) 330px, rgba(244,242,235,0.98) 760px),
-    linear-gradient(90deg, rgba(244,242,235,0.96) 0 47%, rgba(244,242,235,0.60) 74%, rgba(244,242,235,0.34) 100%),
-    url("assets/basketball-background-web.jpg") top right / min(980px, 72vw) auto no-repeat,
+    linear-gradient(180deg, rgba(255,255,255,0.70) 0, rgba(244,242,235,0.72) 330px, rgba(244,242,235,0.92) 760px),
+    linear-gradient(90deg, rgba(244,242,235,0.88) 0 43%, rgba(244,242,235,0.42) 72%, rgba(244,242,235,0.18) 100%),
+    url("assets/basketball-background-web.jpg") top right / min(1120px, 82vw) auto no-repeat,
+    url("assets/basketball-background-web.jpg") bottom left / min(820px, 62vw) auto no-repeat,
     var(--bg);
   background-attachment: fixed;
   color: var(--ink);
@@ -39,7 +40,7 @@ body::before {
     linear-gradient(rgba(31,36,40,0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(31,36,40,0.028) 1px, transparent 1px);
   background-size: 56px 56px;
-  mask-image: linear-gradient(180deg, rgba(0,0,0,0.72), rgba(0,0,0,0.18));
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.56), rgba(0,0,0,0.10));
 }
 
 .shell {
@@ -49,12 +50,21 @@ body::before {
 }
 
 .masthead {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 24px;
   align-items: end;
   border-bottom: 1px solid rgba(31,36,40,0.12);
-  padding: 16px 0 24px;
+  min-height: 240px;
+  border: 1px solid rgba(217,222,220,0.9);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.94) 0 44%, rgba(255,255,255,0.58) 67%, rgba(255,255,255,0.06) 100%),
+    url("assets/basketball-background-web.jpg") right center / auto 100% no-repeat;
+  box-shadow: var(--soft-shadow);
+  overflow: hidden;
+  padding: 26px 24px;
 }
 
 .eyebrow {
@@ -295,6 +305,8 @@ button.active, button:hover, select:focus, button:focus {
 
 .chart.small { min-height: 300px; }
 .chart.mini { min-height: 260px; }
+.chart.matrix { min-height: 340px; }
+.chart.relationship { min-height: 410px; }
 
 svg {
   display: block;
@@ -316,7 +328,7 @@ svg {
 
 .chart-legend text {
   fill: var(--muted);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
 }
 
@@ -335,6 +347,14 @@ svg {
 
 .dot, .bar, .line-point {
   cursor: pointer;
+}
+
+.heat-cell, .flow-point {
+  cursor: pointer;
+}
+
+.trend-line {
+  pointer-events: none;
 }
 
 .game-layout {

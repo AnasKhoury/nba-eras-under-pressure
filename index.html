@@ -110,6 +110,41 @@
       <article class="panel wide">
         <div class="panel-head">
           <div>
+            <h2>Scoring Pressure Relationship</h2>
+            <p>Compare scoring with close games, upsets, and margins by era.</p>
+          </div>
+          <div class="metric-tabs" role="tablist" aria-label="Pressure metric">
+            <button class="active" data-pressure-metric="close_game_pct">Close</button>
+            <button data-pressure-metric="upset_pct">Upsets</button>
+            <button data-pressure-metric="avg_margin">Margin</button>
+          </div>
+        </div>
+        <div id="pressureScatter" class="chart relationship"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Era Profile Matrix</h2>
+            <p>Compare eras across multiple pressure signals at once.</p>
+          </div>
+        </div>
+        <div id="eraHeatmap" class="chart matrix"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>Franchise Rank Flow</h2>
+            <p>Track how leading franchises move across eras by the selected ranking metric.</p>
+          </div>
+        </div>
+        <div id="rankFlow" class="chart matrix"></div>
+      </article>
+
+      <article class="panel wide">
+        <div class="panel-head">
+          <div>
             <h2>Game Explorer</h2>
             <p>Largest model surprises in the current selection. The table updates with the filters above.</p>
           </div>

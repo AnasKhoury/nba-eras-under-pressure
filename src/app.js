@@ -31,11 +31,22 @@ const metricMeta = {
   avg_points_for: { label: "Points for", format: fmtOne }
 };
 
+const eraOrder = ["Early NBA", "Expansion", "Modernizing", "Spacing era", "Recent era"];
+
+const heatMetrics = [
+  { key: "home_win_pct", label: "Home win", format: fmtPct },
+  { key: "avg_total_points", label: "Scoring", format: fmtOne },
+  { key: "close_game_pct", label: "Close games", format: fmtPct },
+  { key: "upset_pct", label: "Upsets", format: fmtPct },
+  { key: "avg_margin", label: "Margin", format: fmtOne }
+];
+
 const state = {
   start: 1947,
   end: 2015,
   team: "All",
   seasonMetric: "home_win_pct",
+  pressureMetric: "close_game_pct",
   rankMetric: "win_pct",
   selectedSeason: null
 };
@@ -140,6 +151,42 @@ function summarizeTeamSeasons(rows) {
   return grouped.map(d => d[1]).filter(d => d.games >= 60);
 }
 
+function summarizeEraProfiles(rows) {
+  const grouped = d3.rollups(
+    rows,
+    values => ({
+      era: values[0].era,
+      games: d3.sum(values, d => d.games),
+      home_win_pct: d3.sum(values, d => d.home_win_pct * (d.games - d.neutral_games)) / d3.sum(values, d => d.games - d.neutral_games),
+      avg_total_points: d3.sum(values, d => d.avg_total_points * d.games) / d3.sum(values, d => d.games),
+      close_game_pct: d3.sum(values, d => d.close_game_pct * d.games) / d3.sum(values, d => d.games),
+      upset_pct: d3.sum(values, d => d.upset_pct * d.games) / d3.sum(values, d => d.games),
+      avg_margin: d3.sum(values, d => d.avg_margin * d.games) / d3.sum(values, d => d.games)
+    }),
+    d => d.era
+  );
+  return grouped.map(d => d[1]).sort((a, b) => d3.ascending(eraOrder.indexOf(a.era), eraOrder.indexOf(b.era)));
+}
+
+function regressionLine(rows, xKey, yKey) {
+  if (rows.length < 2) return null;
+  const xMean = d3.mean(rows, d => d[xKey]);
+  const yMean = d3.mean(rows, d => d[yKey]);
+  const numerator = d3.sum(rows, d => (d[xKey] - xMean) * (d[yKey] - yMean));
+  const denominator = d3.sum(rows, d => (d[xKey] - xMean) ** 2);
+  if (!denominator) return null;
+  const slope = numerator / denominator;
+  const intercept = yMean - slope * xMean;
+  const [x1, x2] = d3.extent(rows, d => d[xKey]);
+  return {
+    x1,
+    y1: slope * x1 + intercept,
+    x2,
+    y2: slope * x2 + intercept,
+    slope
+  };
+}
+
 function gameFilter(d) {
   return inRange(d)
     && (state.team === "All" || d.team === state.team || d.opponent === state.team)
@@ -224,7 +271,7 @@ function drawSeasonChart() {
 
 function drawEraScatter() {
   const data = activeSeasonData();
-  const { svg, g, width, height, margins } = svgFor("#eraScatter", { top: 34, right: 18, bottom: 52, left: 52 });
+  const { svg, g, width, height, margins } = svgFor("#eraScatter", { top: 62, right: 18, bottom: 52, left: 52 });
   const x = d3.scaleLinear().domain(d3.extent(data, d => d.avg_total_points)).nice().range([0, width]);
   const y = d3.scaleLinear().domain(d3.extent(data, d => d.avg_margin)).nice().range([height, 0]);
   g.append("g").attr("class", "gridline").call(d3.axisLeft(y).tickSize(-width).tickFormat(""));
@@ -249,9 +296,9 @@ function drawEraScatter() {
   g.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
   g.append("g").attr("class", "axis").call(d3.axisLeft(y));
   svg.append("text").attr("class", "chart-title").attr("x", margins.left).attr("y", 16).text("Scoring vs. Competitiveness by Era");
-  const legend = svg.append("g").attr("class", "chart-legend").attr("transform", `translate(${margins.left + 230}, 7)`);
+  const legend = svg.append("g").attr("class", "chart-legend").attr("transform", `translate(${margins.left}, 31)`);
   [...eraColors.entries()].forEach(([era, color], i) => {
-    const item = legend.append("g").attr("transform", `translate(${i * 96}, 0)`);
+    const item = legend.append("g").attr("transform", `translate(${(i % 3) * 150}, ${Math.floor(i / 3) * 16})`);
     item.append("circle").attr("cx", 0).attr("cy", 5).attr("r", 4).attr("fill", color);
     item.append("text").attr("x", 8).attr("y", 9).text(era);
   });
@@ -268,6 +315,83 @@ function drawEraScatter() {
     .attr("y", 13)
     .attr("text-anchor", "middle")
     .text("Average margin");
+}
+
+function drawPressureScatter() {
+  const data = activeSeasonData();
+  const meta = metricMeta[state.pressureMetric];
+  const { svg, g, width, height, margins } = svgFor("#pressureScatter", { top: 68, right: 34, bottom: 58, left: 76 });
+  const x = d3.scaleLinear().domain(d3.extent(data, d => d.avg_total_points)).nice().range([0, width]);
+  const y = d3.scaleLinear().domain(d3.extent(data, d => d[state.pressureMetric])).nice().range([height, 0]);
+  const r = d3.scaleSqrt().domain(d3.extent(data, d => d.games)).range([4, 8]);
+
+  svg.append("text")
+    .attr("class", "chart-title")
+    .attr("x", margins.left)
+    .attr("y", 18)
+    .text(`Does Scoring Predict ${meta.label}?`);
+
+  g.append("g").attr("class", "gridline").call(d3.axisLeft(y).tickSize(-width).tickFormat(""));
+
+  const grouped = d3.group(data, d => d.era);
+  [...grouped.entries()].forEach(([era, rows]) => {
+    const line = regressionLine(rows, "avg_total_points", state.pressureMetric);
+    if (!line) return;
+    g.append("line")
+      .attr("class", "trend-line")
+      .attr("x1", x(line.x1))
+      .attr("y1", y(line.y1))
+      .attr("x2", x(line.x2))
+      .attr("y2", y(line.y2))
+      .attr("stroke", eraColors.get(era))
+      .attr("stroke-width", 3)
+      .attr("stroke-dasharray", line.slope >= 0 ? "0" : "7 5")
+      .attr("opacity", 0.86);
+  });
+
+  g.selectAll("circle")
+    .data(data)
+    .join("circle")
+    .attr("class", "dot")
+    .attr("cx", d => x(d.avg_total_points))
+    .attr("cy", d => y(d[state.pressureMetric]))
+    .attr("r", d => d.season === state.selectedSeason ? r(d.games) + 3 : r(d.games))
+    .attr("fill", d => eraColors.get(d.era))
+    .attr("opacity", d => d.season === state.selectedSeason ? 1 : 0.76)
+    .attr("stroke", d => d.season === state.selectedSeason ? colors.red : "#fff")
+    .attr("stroke-width", d => d.season === state.selectedSeason ? 2.4 : 1.3)
+    .on("pointerenter", (event, d) => showTip(event, `<strong>${d.season}: ${d.era}</strong><br>Scoring: ${fmtOne(d.avg_total_points)}<br>${meta.label}: ${meta.format(d[state.pressureMetric])}<br>Games: ${fmtNum(d.games)}`))
+    .on("pointermove", (event, d) => showTip(event, `<strong>${d.season}: ${d.era}</strong><br>Scoring: ${fmtOne(d.avg_total_points)}<br>${meta.label}: ${meta.format(d[state.pressureMetric])}<br>Games: ${fmtNum(d.games)}`))
+    .on("pointerleave", hideTip)
+    .on("click", (_, d) => {
+      state.selectedSeason = state.selectedSeason === d.season ? null : d.season;
+      render();
+    });
+
+  g.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+  g.append("g").attr("class", "axis").call(d3.axisLeft(y).tickFormat(meta.format));
+
+  const legend = svg.append("g").attr("class", "chart-legend").attr("transform", `translate(${margins.left}, 34)`);
+  [...eraColors.entries()].forEach(([era, color], i) => {
+    const item = legend.append("g").attr("transform", `translate(${(i % 3) * 150}, ${Math.floor(i / 3) * 17})`);
+    item.append("line").attr("x1", 0).attr("x2", 18).attr("y1", 5).attr("y2", 5).attr("stroke", color).attr("stroke-width", 3);
+    item.append("circle").attr("cx", 9).attr("cy", 5).attr("r", 3.5).attr("fill", color).attr("stroke", "#fff");
+    item.append("text").attr("x", 24).attr("y", 9).text(era);
+  });
+
+  svg.append("text")
+    .attr("class", "axis-label")
+    .attr("x", margins.left + width / 2)
+    .attr("y", margins.top + height + 44)
+    .attr("text-anchor", "middle")
+    .text("Average total points per game");
+  svg.append("text")
+    .attr("class", "axis-label")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -(margins.top + height / 2))
+    .attr("y", 18)
+    .attr("text-anchor", "middle")
+    .text(meta.label);
 }
 
 function drawTeamBars() {
@@ -310,6 +434,170 @@ function drawTeamBars() {
     .attr("y", margins.top + height + 40)
     .attr("text-anchor", "middle")
     .text(meta.label);
+}
+
+function drawEraHeatmap() {
+  const eras = summarizeEraProfiles(activeSeasonData());
+  const cells = [];
+  const domains = new Map();
+  heatMetrics.forEach(metric => {
+    const values = eras.map(d => d[metric.key]);
+    domains.set(metric.key, d3.extent(values));
+    eras.forEach(era => cells.push({ era: era.era, metric, value: era[metric.key], games: era.games }));
+  });
+
+  const { svg, g, width, height, margins } = svgFor("#eraHeatmap", { top: 34, right: 22, bottom: 52, left: 92 });
+  const x = d3.scaleBand().domain(heatMetrics.map(d => d.label)).range([0, width]).padding(0.08);
+  const y = d3.scaleBand().domain(eras.map(d => d.era)).range([0, height]).padding(0.12);
+  const color = d3.scaleSequential(t => d3.interpolateRgb("#f6f1df", colors.green)(t)).domain([0, 1]);
+
+  svg.append("text")
+    .attr("class", "chart-title")
+    .attr("x", margins.left)
+    .attr("y", 16)
+    .text("Era Profile Matrix");
+
+  g.selectAll("rect")
+    .data(cells)
+    .join("rect")
+    .attr("class", "heat-cell")
+    .attr("x", d => x(d.metric.label))
+    .attr("y", d => y(d.era))
+    .attr("width", x.bandwidth())
+    .attr("height", y.bandwidth())
+    .attr("rx", 5)
+    .attr("fill", d => {
+      const [lo, hi] = domains.get(d.metric.key);
+      return color(hi === lo ? 0.5 : (d.value - lo) / (hi - lo));
+    })
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1.5)
+    .on("pointerenter", (event, d) => showTip(event, `<strong>${d.era}</strong><br>${d.metric.label}: ${d.metric.format(d.value)}<br>Games: ${fmtNum(d.games)}`))
+    .on("pointermove", (event, d) => showTip(event, `<strong>${d.era}</strong><br>${d.metric.label}: ${d.metric.format(d.value)}<br>Games: ${fmtNum(d.games)}`))
+    .on("pointerleave", hideTip);
+
+  g.selectAll("text.cell-value")
+    .data(cells)
+    .join("text")
+    .attr("class", "cell-value")
+    .attr("x", d => x(d.metric.label) + x.bandwidth() / 2)
+    .attr("y", d => y(d.era) + y.bandwidth() / 2 + 4)
+    .attr("text-anchor", "middle")
+    .attr("fill", "#1f2428")
+    .attr("font-size", 11)
+    .attr("font-weight", 800)
+    .text(d => d.metric.format(d.value));
+
+  g.append("g").attr("class", "axis").call(d3.axisLeft(y).tickSize(0));
+  g.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickSize(0));
+  svg.append("text")
+    .attr("class", "axis-label")
+    .attr("x", margins.left + width / 2)
+    .attr("y", margins.top + height + 42)
+    .attr("text-anchor", "middle")
+    .text("Metric");
+}
+
+function drawRankFlow() {
+  const active = activeTeamSeasons();
+  const byEraTeam = d3.rollups(
+    active,
+    values => ({
+      era: values[0].era,
+      team: values[0].team,
+      games: d3.sum(values, d => d.games),
+      wins: d3.sum(values, d => d.wins),
+      win_pct: d3.sum(values, d => d.wins) / d3.sum(values, d => d.games),
+      avg_margin: d3.mean(values, d => d.avg_margin),
+      avg_elo: d3.mean(values, d => d.avg_elo),
+      avg_points_for: d3.mean(values, d => d.avg_points_for)
+    }),
+    d => d.era,
+    d => d.team
+  );
+
+  const eraRanks = [];
+  byEraTeam.forEach(([era, teams]) => {
+    teams.map(d => d[1])
+      .filter(d => d.games >= 40)
+      .sort((a, b) => d3.descending(a[state.rankMetric], b[state.rankMetric]))
+      .slice(0, 8)
+      .forEach((d, i) => eraRanks.push({ ...d, rank: i + 1 }));
+  });
+
+  const selectedTeams = new Set(
+    d3.rollups(eraRanks, v => d3.min(v, d => d.rank), d => d.team)
+      .sort((a, b) => d3.ascending(a[1], b[1]))
+      .slice(0, 7)
+      .map(d => d[0])
+  );
+  const data = eraRanks.filter(d => selectedTeams.has(d.team));
+  const teams = [...selectedTeams];
+
+  const { svg, g, width, height, margins } = svgFor("#rankFlow", { top: 34, right: 96, bottom: 52, left: 82 });
+  const x = d3.scalePoint().domain(eraOrder.filter(era => data.some(d => d.era === era))).range([0, width]).padding(0.45);
+  const y = d3.scaleLinear().domain([8, 1]).range([height, 0]);
+  const teamColor = d3.scaleOrdinal().domain(teams).range([colors.green, colors.orange, colors.indigo, colors.red, colors.gold, colors.steel, "#8a5fbf"]);
+  const meta = metricMeta[state.rankMetric];
+
+  svg.append("text")
+    .attr("class", "chart-title")
+    .attr("x", margins.left)
+    .attr("y", 16)
+    .text(`Top Franchise Rank Flow by ${meta.label}`);
+
+  g.append("g").attr("class", "gridline").call(d3.axisLeft(y).tickSize(-width).tickFormat(""));
+  teams.forEach(team => {
+    const points = data.filter(d => d.team === team).sort((a, b) => d3.ascending(eraOrder.indexOf(a.era), eraOrder.indexOf(b.era)));
+    g.append("path")
+      .datum(points)
+      .attr("fill", "none")
+      .attr("stroke", teamColor(team))
+      .attr("stroke-width", state.team === team ? 4 : 2.4)
+      .attr("opacity", state.team === "All" || state.team === team ? 0.95 : 0.22)
+      .attr("d", d3.line().x(d => x(d.era)).y(d => y(d.rank)).curve(d3.curveMonotoneX));
+  });
+
+  g.selectAll("circle")
+    .data(data)
+    .join("circle")
+    .attr("class", "flow-point")
+    .attr("cx", d => x(d.era))
+    .attr("cy", d => y(d.rank))
+    .attr("r", d => state.team === d.team ? 6 : 4)
+    .attr("fill", d => teamColor(d.team))
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1.4)
+    .attr("opacity", d => state.team === "All" || state.team === d.team ? 1 : 0.25)
+    .on("pointerenter", (event, d) => showTip(event, `<strong>${d.team}</strong><br>${d.era}: rank ${d.rank}<br>${meta.label}: ${meta.format(d[state.rankMetric])}`))
+    .on("pointermove", (event, d) => showTip(event, `<strong>${d.team}</strong><br>${d.era}: rank ${d.rank}<br>${meta.label}: ${meta.format(d[state.rankMetric])}`))
+    .on("pointerleave", hideTip)
+    .on("click", (_, d) => {
+      state.team = state.team === d.team ? "All" : d.team;
+      els.teamSelect.value = state.team;
+      render();
+    });
+
+  const latestEra = [...x.domain()].pop();
+  g.selectAll("text.team-label")
+    .data(data.filter(d => d.era === latestEra))
+    .join("text")
+    .attr("class", "axis-label")
+    .attr("x", width + 8)
+    .attr("y", d => y(d.rank) + 4)
+    .attr("fill", d => teamColor(d.team))
+    .attr("font-weight", 800)
+    .text(d => d.team);
+
+  g.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+  g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(8).tickFormat(d => `#${d}`));
+  svg.append("text")
+    .attr("class", "axis-label")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -(margins.top + height / 2))
+    .attr("y", 18)
+    .attr("text-anchor", "middle")
+    .text("Rank within era");
 }
 
 function drawMarginHist() {
@@ -376,6 +664,9 @@ function render() {
   drawSeasonChart();
   drawEraScatter();
   drawTeamBars();
+  drawPressureScatter();
+  drawEraHeatmap();
+  drawRankFlow();
   drawMarginHist();
   drawGameRows();
 }
@@ -411,6 +702,14 @@ document.querySelectorAll("[data-season-metric]").forEach(button => {
     document.querySelectorAll("[data-season-metric]").forEach(d => d.classList.remove("active"));
     button.classList.add("active");
     state.seasonMetric = button.dataset.seasonMetric;
+    render();
+  });
+});
+document.querySelectorAll("[data-pressure-metric]").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-pressure-metric]").forEach(d => d.classList.remove("active"));
+    button.classList.add("active");
+    state.pressureMetric = button.dataset.pressureMetric;
     render();
   });
 });
