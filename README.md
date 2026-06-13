@@ -1,104 +1,117 @@
-# \# NBA Eras Under Pressure
+# NBA Eras Under Pressure
 
-# 
+Interactive web dashboard for exploring how NBA game structure changed across historical eras using FiveThirtyEight NBA Elo data.
 
-# Interactive web dashboard for exploring how NBA game structure changed across eras using FiveThirtyEight historical NBA Elo data.
+## Live Project
 
-# 
+https://anaskhoury.github.io/nba-eras-under-pressure/?v=final-20260613-2
 
-# \## Live Project
+## Project Overview
 
-# 
+This project analyzes NBA history from 1947 to 2015 through the question:
 
-# https://anaskhoury.github.io/nba-eras-under-pressure/
+**How did NBA eras differ in scoring, home-court advantage, competitiveness, franchise strength, and unexpected results?**
 
-# 
+Instead of presenting the dataset as a static table, the project turns historical game data into a linked interactive dashboard. The user can move between league-wide trends, era-level comparisons, franchise rankings, advanced relationship views, and individual surprising games.
 
-# \## Project Topic
+## Dataset
 
-# 
+The project uses FiveThirtyEight's historical NBA Elo dataset.
 
-# The project analyzes NBA history from 1947 to 2015 through several questions:
+Dataset source:  
+https://github.com/fivethirtyeight/data/tree/master/nba-elo
 
-# 
+The original data contains game-level NBA records with Elo ratings, team information, scores, forecasts, and game outcomes. The dashboard uses processed versions of the data for faster interaction and clearer visualization.
 
-# \- How did home-court advantage change across eras?
+Processed files include:
 
-# \- Did high-scoring eras also produce closer or more unpredictable games?
+- `metadata.json`
+- `season_summary.json`
+- `team_summary.json`
+- `team_seasons.json`
+- `highlight_games.json`
 
-# \- Which franchises stand out under different success metrics?
+## Main Analytical Questions
 
-# \- Which games were the largest Elo-based upsets?
+The dashboard helps explore these questions:
 
-# 
+- How did home-court advantage change across NBA eras?
+- Did high-scoring eras also produce closer or more unpredictable games?
+- Which franchises stand out under different success metrics?
+- How do franchise rankings change across eras?
+- Which games were the largest Elo-based surprises?
 
-# \## Dataset
+## Dashboard Views
 
-# 
+### Season Trends
 
-# Source: FiveThirtyEight NBA Elo dataset  
+Shows league-level metrics over time. The user can switch between home win rate, scoring, close-game rate, and upset rate.
 
-# https://github.com/fivethirtyeight/data/tree/master/nba-elo
+### Era Map
 
-# 
+Compares average total points and average scoring margin. Each dot represents a season and color represents the NBA era.
 
-# The processed dashboard data includes season-level summaries, franchise-level summaries, franchise-season records, and highlighted surprising games.
+### Scoring Pressure Relationship
 
-# 
+An advanced scatterplot that compares scoring level with close-game rate, upset rate, or average margin. Era trend lines show whether the relationship changes across historical periods.
 
-# \## Dashboard Views
+### Franchise Ranking
 
-# 
+Ranks franchises by selectable metrics: win rate, average margin, average Elo, and points scored. Clicking a franchise filters the entire dashboard.
 
-# \- Season Trends: league-level measures over time.
+### Era Profile Matrix
 
-# \- Era Map: scoring versus average margin by season and era.
+A heatmap comparing NBA eras across several pressure signals at once: home win rate, scoring, close games, upsets, and average margin.
 
-# \- Scoring Pressure Relationship: relationship between scoring and close games, upsets, or margin, with era trend lines.
+### Franchise Rank Flow
 
-# \- Franchise Ranking: sortable team comparison by win rate, average margin, average Elo, and points scored.
+Shows how leading franchises move across eras according to the selected ranking metric.
 
-# \- Era Profile Matrix: heatmap comparing eras across several pressure signals.
+### Game Explorer
 
-# \- Franchise Rank Flow: ranking movement of leading franchises across eras.
+Lists notable game-level surprises and close games from the current selection.
 
-# \- Game Explorer: selected game-level surprises and close games.
+## Interaction
 
-# 
+The dashboard supports:
 
-# \## Interaction
+- Season range filtering
+- Franchise filtering
+- Metric switching
+- Clickable season points
+- Clickable franchise bars
+- Hover tooltips with exact values
+- Linked views across the dashboard
+- Resetting all filters
 
-# 
+These interactions allow the user to move from broad historical patterns to specific teams, seasons, and games.
 
-# Users can filter by season range and franchise, switch metrics, click seasons, click franchise bars, and hover over marks for exact values. The views are linked so changes in one part of the dashboard update the rest.
+## Tools and Libraries
 
-# 
+- HTML
+- CSS
+- JavaScript
+- D3.js
+- Python for preprocessing
+- GitHub Pages for deployment
+- OpenAI / ChatGPT / Codex assistance for coding, writing, debugging, and project refinement
 
-# \## Tools
+## Data Processing
 
-# 
+The original FiveThirtyEight dataset was processed into dashboard-ready JSON files. The preprocessing included:
 
-# \- HTML
+- Treating each game once instead of duplicating both team rows
+- Calculating home win rate
+- Calculating total points per game
+- Calculating scoring margin
+- Defining close games as games decided by 5 points or fewer
+- Defining upsets as games where the winner had less than a 50% Elo forecast
+- Aggregating results by season, era, and franchise
+- Creating highlighted game records for the game explorer
 
-# \- CSS
+## How to Run Locally
 
-# \- JavaScript
+Open a terminal in the project folder and run:
 
-# \- D3.js
-
-# \- Python for preprocessing
-
-# \- GitHub Pages for deployment
-
-# \- OpenAI / ChatGPT / Codex assistance for coding, writing, and project refinement
-
-# 
-
-# \## How to Run Locally
-
-# 
-
-# ```bash
-
-# python -m http.server 8000
-
+```bash
+python -m http.server 8000
